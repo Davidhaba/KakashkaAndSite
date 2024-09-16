@@ -1,13 +1,7 @@
 Flask
 Flask-SocketIO
 eventlet
-random
-time
-json
-os
-telegram
 logging
 datetime
 asyncio
-threading
 python-telegram-bot
