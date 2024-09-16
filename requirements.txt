@@ -1,0 +1,13 @@
+Flask
+Flask-SocketIO
+eventlet
+random
+time
+json
+import os
+telegram
+logging
+datetime
+asyncio
+threading
+telegram-py
