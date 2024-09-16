@@ -10,4 +10,4 @@ logging
 datetime
 asyncio
 threading
-telegram-py
+python-telegram-bot
