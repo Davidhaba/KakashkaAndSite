@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Історія повідомлень</title>
+</head>
+<body>
+    <h1>Історія повідомлень чату: {{ chat_id }}</h1>
+    <ul>
+        {% for message in messages %}
+        <li>{{ message.date }} - {{ message.from_user }}: {{ message.text }}</li>
+        {% endfor %}
+    </ul>
+</body>
+</html>
