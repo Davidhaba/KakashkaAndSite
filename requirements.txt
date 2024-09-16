@@ -4,7 +4,7 @@ eventlet
 random
 time
 json
-import os
+os
 telegram
 logging
 datetime
