@@ -312,7 +312,7 @@ def checkAuchTelegramLogin() -> bool:
         user_id_logedin = user_data.get('id')
         if str(user_id_logedin) == '5046805682':
             session['user_id'] = user_id_logedin
-            cache.set(f"user_session_{user_id_logedin}", True, timeout=3)
+            cache.set(f"user_session_{user_id_logedin}", True, timeout=3600)
             return True
     return False
 
