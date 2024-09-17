@@ -331,23 +331,6 @@ def logout():
     session.clear()
     return redirect(url_for('login'))
 
-async def get_chat_data(chat_id):
-    try:
-        chat = await bot.get_chat(chat_id)
-        return {
-            'title': chat.title,
-            'id': chat_id,
-            'type': chat.type
-        }
-    except TelegramError as e:
-        print(f"Помилка при отриманні чату {chat_id}: {e}")
-        return None
-
-async def get_all_chats():
-    tasks = [get_chat_data(chat_id) for chat_id in group_chats]
-    results = await asyncio.gather(*tasks)
-    return [chat for chat in results if chat]
-
 @appFlask.route('/chats', methods=['GET'])
 def chats():
     if 'user_id' not in session:
@@ -357,12 +340,22 @@ def chats():
         return "Ви не маєте доступу до цієї сторінки.", 403
 
     try:
-        chats = asyncio.run(get_all_chats())
-        return render_template('chats.html', chats=chats)
+        chats = {}
+        for chat_id in group_chats:
+            try:
+                chat = asyncio.run(bot.get_chat(chat_id))
+                chats[chat_id] = {
+                    'title': chat.title,
+                    'id': chat_id,
+                    'type': chat.type
+                }
+            except TelegramError as e:
+                print(f"Помилка при отриманні чату {chat_id}: {e}")
+
+        return render_template('chats.html', chats=chats.values())
 
     except Exception as e:
         return f"Помилка: {str(e)}"
-
 
 @appFlask.route('/chat/<chat_id>')
 def chat_history(chat_id):
