@@ -341,7 +341,7 @@ def chats():
 
     try:
         chats = {}
-        for chat_id in list(group_chats):
+        for chat_id in group_chats:
             try:
                 chat = asyncio.run(bot.get_chat(chat_id))
                 chats[chat_id] = {
@@ -352,7 +352,7 @@ def chats():
             except TelegramError as e:
                 print(f"Помилка при отриманні чату {chat_id}: {e}")
 
-      return render_template('chats.html', chats=chats)
+      return render_template('chats.html', chats=chats.values())
 
     except Exception as e:
         return f"Помилка: {str(e)}"
