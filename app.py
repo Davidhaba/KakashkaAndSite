@@ -2,7 +2,7 @@ import random
 import time
 import json
 import os
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, Bot
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, CallbackContext
 import logging
 from datetime import datetime
@@ -23,6 +23,7 @@ used_promo_codes = {}
 last_command_time = {}
 commands_for_poop = {"кака", "какать", "срать"}
 group_chats = set()
+chat_messages = {}
 promo_codes = {
     "олд": 20.0,
     "чит": 10.0,
@@ -50,6 +51,7 @@ def load_data():
                 for user_id, promo_code in data.get('used_promo_codes', {}).items()
             }
             group_chats = set(data.get('group_chats', []))
+            chat_messages = data.get('chat_messages', {})
 
 def save_data():
     """Сохраняет данные в файл."""
@@ -67,6 +69,7 @@ def save_data():
             for user_id, promo_code in used_promo_codes.items()
         },
         'group_chats': list(group_chats),
+        'chat_messages': chat_messages,
     }
     with open(DATA_FILE, 'w') as file:
         json.dump(data, file, indent=4)
@@ -87,6 +90,13 @@ async def message_handler(update: Update, context: CallbackContext) -> None:
     user_name = user.username
     current_time = time.time()
 
+    if chat_id not in chat_messages:
+        chat_messages[chat_id] = []
+    chat_messages[chat_id].append({
+        'text': update.message.text,
+        'from_user': user_name,
+        'date': update.message.date
+    })
     if not is_command_cooldown_valid(user_id) or update.message is None or update.message.chat is None:
         return
 
@@ -272,13 +282,15 @@ def home():
 @appFlask.route('/chats', methods=['GET'])
 def chats():
     user_id = request.args.get('user_id', type=int)
+
     if user_id != 5046805682:
         return "Доступ заборонено. Ви не є творцем бота."
+
     try:
         chats = []
         for chat_id in group_chats:
             try:
-                chat = bot.get_chat(chat_id)
+                chat = asyncio.run(bot.get_chat(chat_id))
                 chats.append({
                     'title': chat.title,
                     'id': chat_id,
@@ -286,22 +298,26 @@ def chats():
                 })
             except TelegramError as e:
                 print(f"Помилка при отриманні чату {chat_id}: {e}")
+
         return render_template('chats.html', chats=chats)
+
     except Exception as e:
         return f"Помилка: {str(e)}"
 
-@appFlask.route('/chat/<int:chat_id>')
+@appFlask.route('/chat/<chat_id>')
 def chat_history(chat_id):
     try:
-        messages = []
-        for message in bot.get_chat_history(chat_id, limit=20):
-            messages.append({
-                'text': message.text,
-                'from_user': message.from_user.username,
-                'date': message.date
-            })
-        return render_template('history.html', messages=messages, chat_id=chat_id)
-    except TelegramError as e:
+        chat_id = int(chat_id)
+        
+        messages = chat_messages.get(chat_id, [])
+        formatted_messages = [{
+            'text': message['text'],
+            'from_user': message['from_user'],
+            'date': message['date']
+        } for message in messages]
+        
+        return render_template('history.html', messages=formatted_messages, chat_id=chat_id)
+    except Exception as e:
         return f"Помилка: {str(e)}"
 
 def main():
@@ -325,4 +341,3 @@ if __name__ == '__main__':
     thread = Thread(target=lambda: appFlask.run(debug=True, use_reloader=False))
     thread.start()
     main()
-
