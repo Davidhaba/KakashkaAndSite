@@ -333,30 +333,27 @@ def logout():
     
 @appFlask.route('/chats', methods=['GET'])
 def chats():
-    if not session.get('logged_in'):
+    if 'user_id' not in session:
         return redirect(url_for('login'))
+
+    if session['user_id'] != '5046805682':
+        return "Ви не маєте доступу до цієї сторінки.", 403
 
     try:
         chats = []
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        
-        async def fetch_chats():
-            nonlocal chats
-            for chat_id in group_chats:
-                try:
-                    chat = await bot.get_chat(chat_id)
-                    chats.append({
-                        'title': chat.title,
-                        'id': chat_id,
-                        'type': chat.type
-                    })
-                except TelegramError as e:
-                    print(f"Помилка при отриманні чату {chat_id}: {e}")
+        for chat_id in group_chats:
+            try:
+                chat = asyncio.run(bot.get_chat(chat_id))
+                chats.append({
+                    'title': chat.title,
+                    'id': chat_id,
+                    'type': chat.type
+                })
+            except TelegramError as e:
+                print(f"Помилка при отриманні чату {chat_id}: {e}")
 
-        loop.run_until_complete(fetch_chats())
         return render_template('chats.html', chats=chats)
-        
+
     except Exception as e:
         return f"Помилка: {str(e)}"
 
