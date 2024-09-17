@@ -352,7 +352,7 @@ def chats():
             except TelegramError as e:
                 print(f"Помилка при отриманні чату {chat_id}: {e}")
 
-      return render_template('chats.html', chats=chats.values())
+        return render_template('chats.html', chats=chats.values())
 
     except Exception as e:
         return f"Помилка: {str(e)}"
