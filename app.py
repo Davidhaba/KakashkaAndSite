@@ -331,7 +331,7 @@ def logout():
     session.clear()
     return redirect(url_for('login'))
     
-@appFlask.route('/chats')
+@appFlask.route('/chats', methods=['GET'])
 def chats():
     user_id = session.get('user_id')
 
@@ -344,7 +344,7 @@ def chats():
         chats = []
         for chat_id in group_chats:
             try:
-                chat = asyncio.run(bot.get_chat(chat_id))
+                chat = loop.run_until_complete(bot.get_chat(chat_id))
                 chats.append({
                     'title': chat.title,
                     'id': chat_id,
