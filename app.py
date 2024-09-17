@@ -341,7 +341,7 @@ def chats():
 
     try:
         chats = []
-        for chat_id in group_chats:
+        for chat_id in list(group_chats):
             try:
                 chat = asyncio.run(bot.get_chat(chat_id))
                 chats.append({
