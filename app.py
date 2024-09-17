@@ -331,7 +331,7 @@ def logout():
     session.clear()
     return redirect(url_for('login'))
     
-@appFlask.route('/chats', methods=['GET'])
+@appFlask.route('/chats')
 def chats():
     user_id = session.get('user_id')
 
