@@ -392,8 +392,6 @@ def main():
     loop.run_until_complete(app.run_polling())
 
 if __name__ == '__main__':
-    thread = Thread(target=lambda: appFlask.run(debug=True, use_reloader=False))
-    thread.start()
     socketio.run(appFlask, host='0.0.0.0', port=80)
     main()
 
