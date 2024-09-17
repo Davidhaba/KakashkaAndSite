@@ -5,3 +5,5 @@ logging
 datetime
 asyncio
 python-telegram-bot
+flask-session
+requests
