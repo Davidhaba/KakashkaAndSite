@@ -343,7 +343,7 @@ def chats():
         chats = []
         for chat_id in list(group_chats):
             try:
-                chat = bot.get_chat(chat_id)
+                chat = asyncio.run(bot.get_chat(chat_id))
                 chats.append({
                     'title': chat.title,
                     'id': chat_id,
