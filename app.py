@@ -351,7 +351,8 @@ def chats():
                 })
             except TelegramError as e:
                 print(f"Помилка при отриманні чату {chat_id}: {e}")
-        logging.error(chats)
+        for chat in chats:
+          logging.error(chat.title)
         return render_template('chats.html', chats=chats)
 
     except Exception as e:
