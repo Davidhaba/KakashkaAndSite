@@ -392,7 +392,7 @@ def main():
     loop.run_until_complete(app.run_polling())
 
 if __name__ == '__main__':
-    thread = Thread(target=lambda: appFlask.run(debug=True, use_reloader=False))
+    thread = Thread(target=lambda: appFlask.run(host='0.0.0.0', port=5000, debug=True, use_reloader=False))
     thread.start()
     main()
 
