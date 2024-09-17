@@ -2,14 +2,15 @@ import random
 import time
 import json
 import os
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, Bot
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, CallbackContext
 import logging
 from datetime import datetime
 import asyncio
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, redirect, url_for, session
 from telegram.error import TelegramError
 from threading import Thread
+import requests
 
 logging.basicConfig(filename='bot_errors.log',
                     filemode='a',
@@ -24,11 +25,18 @@ last_command_time = {}
 commands_for_poop = {"кака", "какать", "срать"}
 group_chats = set()
 chat_messages = {}
+appFlask = Flask(__name__)
+appFlask.secret_key = os.urandom(24)
+appFlask.config['SESSION_TYPE'] = 'filesystem'
+Session(appFlask)
+
+TELEGRAM_BOT_TOKEN = '7288586629:AAHuQ1qzfq5cGM4_BzT8UnOy4Io1GXLC5V8'
+TELEGRAM_BOT_USERNAME = 'YOUR_BOT_USERNAME'
+TELEGRAM_BOT_OWNER_ID = 123456789
 promo_codes = {
     "олд": 20.0,
     "чит": 10.0,
 }
-appFlask = Flask(__name__)
 
 def load_data():
     """Загружает данные из файла."""
@@ -41,7 +49,7 @@ def load_data():
             global_user_data = {
                 int(user_id): value
                 for user_id, value in data.get('global_user_data', {}).items()
-            }
+}
             user_last_poop_time = {
                 int(user_id): timestamp
                 for user_id, timestamp in data.get('user_last_poop_time', {}).items()
@@ -95,7 +103,7 @@ async def message_handler(update: Update, context: CallbackContext) -> None:
     chat_messages[chat_id].append({
         'text': update.message.text,
         'from_user': user_name,
-        'date': update.message.date
+        'date': datetime.now().isoformat()
     })
     if not is_command_cooldown_valid(user_id) or update.message is None or update.message.chat is None:
         return
@@ -274,17 +282,17 @@ async def schedule_broadcast(context: CallbackContext):
     else:
         print("Час для розсилки вже минув.")
 
-
 @appFlask.route('/')
 def home():
     return render_template('index.html')
 
 @appFlask.route('/chats', methods=['GET'])
 def chats():
-    user_id = request.args.get('user_id', type=int)
-
-    if user_id != 5046805682:
-        return "Доступ заборонено. Ви не є творцем бота."
+    #password = request.args.get('password', type=int)
+    if 'user' not in session:
+        return redirect(url_for('index'))
+    #if password != 5046805682:
+    #    return "Доступ заборонено. Ви не є творцем бота."
 
     try:
         chats = []
@@ -322,7 +330,7 @@ def chat_history(chat_id):
 
 def main():
     global bot
-    app = Application.builder().token("7288586629:AAHuQ1qzfq5cGM4_BzT8UnOy4Io1GXLC5V8").build()
+    app = Application.builder().token(bot_token).build()
     bot = app.bot
     load_data()
     app.add_handler(CommandHandler("help", help_command))
@@ -341,3 +349,4 @@ if __name__ == '__main__':
     thread = Thread(target=lambda: appFlask.run(debug=True, use_reloader=False))
     thread.start()
     main()
+    
