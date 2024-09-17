@@ -7,3 +7,4 @@ asyncio
 python-telegram-bot
 flask-session
 requests
+flask-caching
