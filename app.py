@@ -398,7 +398,7 @@ def main():
     app.add_handler(CommandHandler("top", globaltop))
     app.add_handler(MessageHandler(filters.TEXT & filters.ChatType.PRIVATE, private_message_handler))
     app.add_handler(MessageHandler(filters.TEXT, message_handler))
-    app.add_handler(ChatMemberHandler(handle_chat_member_update, chat_member_types='group'))
+    app.add_handler(ChatMemberHandler(handle_chat_member_update, ChatMemberHandler.CHAT_MEMBER))
     print("Бот успішно запущено.")
 
     loop = asyncio.new_event_loop()
