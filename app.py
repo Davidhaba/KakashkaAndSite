@@ -7,10 +7,9 @@ from telegram.ext import Application, CommandHandler, MessageHandler, filters, C
 import logging
 from datetime import datetime
 import asyncio
-from flask import Flask, render_template, request, redirect, url_for, session
+from flask import Flask, render_template, url_for
 from telegram.error import TelegramError
 from threading import Thread
-import requests
 
 logging.basicConfig(filename='bot_errors.log',
                     filemode='a',
@@ -26,9 +25,6 @@ commands_for_poop = {"кака", "какать", "срать"}
 group_chats = set()
 chat_messages = {}
 appFlask = Flask(__name__)
-appFlask.secret_key = os.urandom(24)
-appFlask.config['SESSION_TYPE'] = 'filesystem'
-Session(appFlask)
 
 TELEGRAM_BOT_TOKEN = '7288586629:AAHuQ1qzfq5cGM4_BzT8UnOy4Io1GXLC5V8'
 TELEGRAM_BOT_USERNAME = 'YOUR_BOT_USERNAME'
@@ -330,7 +326,7 @@ def chat_history(chat_id):
 
 def main():
     global bot
-    app = Application.builder().token(bot_token).build()
+    app = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
     bot = app.bot
     load_data()
     app.add_handler(CommandHandler("help", help_command))
