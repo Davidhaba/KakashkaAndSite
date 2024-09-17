@@ -9,6 +9,7 @@ from datetime import datetime
 import asyncio
 from flask import Flask, render_template, request, redirect, url_for, session
 from flask_caching import Cache
+from flask_socketio import SocketIO
 from telegram.error import TelegramError
 from threading import Thread
 import hashlib
@@ -32,6 +33,7 @@ appFlask.secret_key = os.urandom(24)
 bot_token = "7288586629:AAHuQ1qzfq5cGM4_BzT8UnOy4Io1GXLC5V8"
 cache = Cache(config={'CACHE_TYPE': 'FileSystemCache', 'CACHE_DIR': 'cache-directory'})
 cache.init_app(appFlask)
+socketio = SocketIO(appFlask)
 promo_codes = {
     "олд": 20.0,
     "чит": 10.0,
@@ -392,6 +394,7 @@ def main():
 if __name__ == '__main__':
     thread = Thread(target=lambda: appFlask.run(debug=True, use_reloader=False))
     thread.start()
+    socketio.run(appFlask, host='0.0.0.0', port=80)
     main()
 
   
