@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chats</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <div class="navbar">
+        <a href="{{ url_for('chats') }}">Chats</a>
+        <a href="{{ url_for('chat_history', chat_id=1) }}">Chat History</a>
+    </div>
+    <div class="container">
+        <h1>Chats</h1>
+        <table>
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>ID</th>
+                    <th>Type</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for chat in chats %}
+                <tr>
+                    <td><a href="{{ url_for('chat_history', chat_id=chat.id) }}">{{ chat.title }}</a></td>
+                    <td>{{ chat.id }}</td>
+                    <td>{{ chat.type }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</body>
+  </html>
+  
