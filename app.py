@@ -373,13 +373,17 @@ def chat_history(chat_id):
     except Exception as e:
         return f"Помилка: {str(e)}"
 
-async def bot_added_removed_group(update: Update, context: CallbackContext):
-    chat_member: ChatMember = update.chat_member
-    chat_id = update.effective_chat.id
-    if chat_member.new_chat_member.user.id == context.bot.id:
+async def handle_chat_member_update(update: Update, context: CallbackContext):
+    chat_member_update: ChatMemberUpdated = update.chat_member
+    bot_id = context.bot.id
+    logging.error("chat_id")
+    if chat_member_update.new_chat_member.user.id == bot_id and chat_member_update.new_chat_member.status == 'member':
+        chat_id = chat_member_update.chat.id
         group_chats.add(chat_id)
-        logging.error(f"Бота додано в групу з ID: {chat_id}")
-    elif chat_member.old_chat_member.user.id == context.bot.id and not chat_member.new_chat_member.status in ['member', 'administrator']:
+        logging.error(f"Бота додано до групи з ID: {chat_id}")
+
+    if chat_member_update.old_chat_member.user.id == bot_id and chat_member_update.new_chat_member.status in ['left', 'kicked']:
+        chat_id = chat_member_update.chat.id
         if chat_id in group_chats:
             group_chats.remove(chat_id)
             logging.error(f"Бота видалено з групи з ID: {chat_id}")
@@ -394,7 +398,7 @@ def main():
     app.add_handler(CommandHandler("top", globaltop))
     app.add_handler(MessageHandler(filters.TEXT & filters.ChatType.PRIVATE, private_message_handler))
     app.add_handler(MessageHandler(filters.TEXT, message_handler))
-    app.add_handler(ChatMemberHandler(bot_added_removed_group, ChatMemberHandler.MY_CHAT_MEMBER))
+    app.add_handler(ChatMemberHandler(handle_chat_member_update))
     print("Бот успішно запущено.")
 
     loop = asyncio.new_event_loop()
