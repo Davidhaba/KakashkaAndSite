@@ -2,8 +2,8 @@ import random
 import time
 import json
 import os
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import Application, CommandHandler, MessageHandler, filters, CallbackContext
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, ChatMember
+from telegram.ext import Application, CommandHandler, MessageHandler, filters, CallbackContext, ChatMemberHandler
 import logging
 from datetime import datetime
 import asyncio
@@ -373,6 +373,17 @@ def chat_history(chat_id):
     except Exception as e:
         return f"Помилка: {str(e)}"
 
+async def bot_added_removed_group(update: Update, context: CallbackContext):
+    chat_member: ChatMember = update.chat_member
+    chat_id = update.effective_chat.id
+    if chat_member.new_chat_member.user.id == context.bot.id:
+        group_chats.add(chat_id)
+        logging.info(f"Бота додано в групу з ID: {chat_id}")
+    elif chat_member.old_chat_member.user.id == context.bot.id and not chat_member.new_chat_member.status in ['member', 'administrator']:
+        if chat_id in group_chats:
+            group_chats.remove(chat_id)
+            logging.info(f"Бота видалено з групи з ID: {chat_id}")
+
 def main():
     global bot
     app = Application.builder().token(bot_token).build()
@@ -383,6 +394,7 @@ def main():
     app.add_handler(CommandHandler("top", globaltop))
     app.add_handler(MessageHandler(filters.TEXT & filters.ChatType.PRIVATE, private_message_handler))
     app.add_handler(MessageHandler(filters.TEXT, message_handler))
+    app.add_handler(ChatMemberHandler(bot_added_removed_group, ChatMemberHandler.MY_CHAT_MEMBER))
     print("Бот успішно запущено.")
 
     loop = asyncio.new_event_loop()
