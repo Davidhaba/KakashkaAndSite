@@ -7,9 +7,12 @@ from telegram.ext import Application, CommandHandler, MessageHandler, filters, C
 import logging
 from datetime import datetime
 import asyncio
-from flask import Flask, render_template, url_for
+from flask import Flask, render_template, request, redirect, url_for, session
+from flask_caching import Cache
 from telegram.error import TelegramError
 from threading import Thread
+import hashlib
+import hmac
 
 logging.basicConfig(filename='bot_errors.log',
                     filemode='a',
@@ -25,10 +28,10 @@ commands_for_poop = {"кака", "какать", "срать"}
 group_chats = set()
 chat_messages = {}
 appFlask = Flask(__name__)
-
-TELEGRAM_BOT_TOKEN = '7288586629:AAHuQ1qzfq5cGM4_BzT8UnOy4Io1GXLC5V8'
-TELEGRAM_BOT_USERNAME = 'YOUR_BOT_USERNAME'
-TELEGRAM_BOT_OWNER_ID = 123456789
+appFlask.secret_key = os.urandom(24)
+bot_token = "7288586629:AAHuQ1qzfq5cGM4_BzT8UnOy4Io1GXLC5V8"
+cache = Cache(config={'CACHE_TYPE': 'FileSystemCache', 'CACHE_DIR': 'cache-directory'})
+cache.init_app(appFlask)
 promo_codes = {
     "олд": 20.0,
     "чит": 10.0,
@@ -278,18 +281,63 @@ async def schedule_broadcast(context: CallbackContext):
     else:
         print("Час для розсилки вже минув.")
 
-@appFlask.route('/')
-def home():
-    return render_template('index.html')
+def verify_telegram_auth(data: dict) -> bool:
+    if 'hash' not in data:
+        return False
+    check_hash = data.pop('hash')
+    sorted_data = sorted(f'{key}={value}' for key, value in data.items())
+    data_check_string = '\n'.join(sorted_data)
+    
+    secret_key = hashlib.sha256(bot_token.encode()).digest()
+    calculated_hash = hmac.new(secret_key, data_check_string.encode(), hashlib.sha256).hexdigest()
+    
+    return calculated_hash == check_hash
 
+@appFlask.route('/')
+def main():
+    return redirect(url_for('login'))
+
+@appFlask.route('/login')
+def login():
+    user_id = session.get('user_id')
+    if not user_id or not cache.get(f"user_session_{user_id}"):
+        return render_template('login.html')
+    return redirect(url_for('chats'))
+
+def checkAuchTelegramLogin() -> bool:
+    user_data = request.args.to_dict()
+    if verify_telegram_auth(user_data):
+        user_id_logedin = user_data.get('id')
+        if str(user_id_logedin) == '5046805682':
+            session['user_id'] = user_id_logedin
+            cache.set(f"user_session_{user_id_logedin}", True, timeout=3)
+            return True
+    return False
+
+@appFlask.route('/auth')
+def auth():
+    if checkAuchTelegramLogin():
+        return redirect(url_for('chats'))
+    else:
+        return "Ви не маєте доступу до цієї сторінки.", 403
+
+@appFlask.route('/logout')
+def logout():
+    user_id_logedin = session.get('user_id')
+    if user_id_logedin:
+        cache.delete(f"user_session_{user_id_logedin}")
+    session.clear()
+    return redirect(url_for('login'))
+    
 @appFlask.route('/chats', methods=['GET'])
 def chats():
-    #password = request.args.get('password', type=int)
-    if 'user' not in session:
-        return redirect(url_for('index'))
-    #if password != 5046805682:
-    #    return "Доступ заборонено. Ви не є творцем бота."
+    user_id = session.get('user_id')
 
+    if not user_id or not cache.get(f"user_session_{user_id}"):
+        return redirect(url_for('login'))
+    if user_id != '5046805682':
+        return "Ви не маєте доступу до цієї сторінки.", 403
+        
     try:
         chats = []
         for chat_id in group_chats:
@@ -326,7 +374,7 @@ def chat_history(chat_id):
 
 def main():
     global bot
-    app = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
+    app = Application.builder().token(bot_token).build()
     bot = app.bot
     load_data()
     app.add_handler(CommandHandler("help", help_command))
@@ -345,4 +393,5 @@ if __name__ == '__main__':
     thread = Thread(target=lambda: appFlask.run(debug=True, use_reloader=False))
     thread.start()
     main()
-    
+
+  
