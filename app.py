@@ -378,11 +378,11 @@ async def bot_added_removed_group(update: Update, context: CallbackContext):
     chat_id = update.effective_chat.id
     if chat_member.new_chat_member.user.id == context.bot.id:
         group_chats.add(chat_id)
-        logging.info(f"Бота додано в групу з ID: {chat_id}")
+        logging.error(f"Бота додано в групу з ID: {chat_id}")
     elif chat_member.old_chat_member.user.id == context.bot.id and not chat_member.new_chat_member.status in ['member', 'administrator']:
         if chat_id in group_chats:
             group_chats.remove(chat_id)
-            logging.info(f"Бота видалено з групи з ID: {chat_id}")
+            logging.error(f"Бота видалено з групи з ID: {chat_id}")
 
 def main():
     global bot
