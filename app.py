@@ -340,20 +340,19 @@ def chats():
         return "Ви не маєте доступу до цієї сторінки.", 403
 
     try:
-        chats = []
+        chats = {}
         for chat_id in list(group_chats):
             try:
                 chat = asyncio.run(bot.get_chat(chat_id))
-                chats.append({
+                chats[chat_id] = {
                     'title': chat.title,
                     'id': chat_id,
                     'type': chat.type
-                })
+                }
             except TelegramError as e:
                 print(f"Помилка при отриманні чату {chat_id}: {e}")
-        for chat in chats:
-          logging.error(chat.title)
-        return render_template('chats.html', chats=chats)
+
+      return render_template('chats.html', chats=chats)
 
     except Exception as e:
         return f"Помилка: {str(e)}"
